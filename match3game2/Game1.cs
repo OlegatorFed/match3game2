@@ -10,7 +10,7 @@ namespace match3game2
         private SpriteBatch _spriteBatch;
 
         public Game1()
-        {
+        { 
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
