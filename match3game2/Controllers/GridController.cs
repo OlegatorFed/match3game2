@@ -9,7 +9,7 @@ namespace match3game2.Controllers
     internal class GridController
     {
 
-        GridConfiguration _g
+        GridConfiguration Configuration;
 
         GridController() { }
 
