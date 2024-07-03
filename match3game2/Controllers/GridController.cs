@@ -1,5 +1,9 @@
-﻿using System;
+﻿using match3game2.Builders;
+using match3game2.Models;
+using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,9 +13,43 @@ namespace match3game2.Controllers
     internal class GridController
     {
 
-        GridConfiguration Configuration;
+        private Grid _grid;
+        private GridConfiguration _configuration;
+        private GridBuilder _gridBuilder;
 
-        GridController() { }
+        public GridController(ConfigurationManager configurationManager, GridBuilder gridBuilder) 
+        {
+            _configuration = configurationManager.GridConfiguration;
+            _gridBuilder = gridBuilder;
+
+            _grid = _gridBuilder.Build();
+        }
+
+        public void Fill()
+        {
+            for (int i = 0; i < _configuration.Width; i++)
+            {
+                for (int j = 0; j < _configuration.Height; j++)
+                {
+                    _grid.Gems[i].Add(new Gem());
+                }
+            }
+        }
+
+        public Gem GetGem(Point point)
+        {
+            return _grid.Gems[point.X][point.Y];
+        }
+
+        public void UpdateGem(Point point, Gem other)
+        {
+            _grid.Gems[point.X][point.Y] = other;
+        }
+
+        public void RemoveGem(Point point)
+        {
+            _grid.Gems[point.X][point.Y] = null;
+        }
 
     }
 }

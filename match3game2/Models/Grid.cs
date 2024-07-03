@@ -9,15 +9,15 @@ namespace match3game2.Models
     internal class Grid
     {
 
-        private List<List<Gem>> Gems;
+        public List<List<Gem>> Gems;
 
         public Grid(int width, int height)
         {
 
-            Gems = new List<List<Gem>>(height);
-            for (int i = 0; i < width; i++)
+            Gems = new List<List<Gem>>(width);
+            for (int i = 0; i < height; i++)
             {
-                Gems.Add(new List<Gem>(width));
+                Gems.Add(new List<Gem>(height));
             }
         }
 
