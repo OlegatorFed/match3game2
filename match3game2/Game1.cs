@@ -1,5 +1,7 @@
 ﻿using match3game2.Builders;
+using match3game2.Configurations;
 using match3game2.Controllers;
+using match3game2.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,20 +13,21 @@ namespace match3game2
 {
     public class Game1 : Game
     {
+
+        private SpriteFont _font;
+
         private ServiceProvider _serviceProvider;
 
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        private SpriteFont _font;
-
         private GridController _gridController;
         private TimerController _timerController;
         private ScoreContoller _scoreContoller;
         private MouseHandler _mouseHandler;
+        private ButtonBuilder _buttonBuilder;
 
         public event Action Updated;
-        //private Stopwatch _stopwatch;
 
         public Game1()
         {
@@ -33,6 +36,7 @@ namespace match3game2
             services.AddSingleton<GameController>();
             services.AddSingleton<GridController>();
             services.AddSingleton<GridBuilder>();
+            services.AddSingleton<ButtonBuilder>();
             services.AddSingleton<ConfigurationManager>();
             services.AddSingleton<TimerController>();
             services.AddSingleton<ScoreContoller>();
@@ -59,7 +63,7 @@ namespace match3game2
 
             _mouseHandler = _serviceProvider.GetRequiredService<MouseHandler>();
 
-            //_stopwatch = Stopwatch.StartNew();
+            _buttonBuilder = _serviceProvider.GetRequiredService<ButtonBuilder>();
 
             base.Initialize();
         }
@@ -70,7 +74,6 @@ namespace match3game2
 
             _font = Content.Load<SpriteFont>("fonts/font");
 
-            // TODO: use this.Content to load your game content here
         }
 
         protected override void Update(GameTime gameTime)
@@ -92,12 +95,21 @@ namespace match3game2
 
             _spriteBatch.Begin();
 
-            _spriteBatch.DrawString(_font, $"{timeLeft}", 
-                Vector2.Zero, Color.Black);
-            _spriteBatch.DrawString(_font, $"{score}",
-                new Vector2(_graphics.PreferredBackBufferWidth / 2 - _font.MeasureString(score.ToString()).X / 2, 0), Color.Black);
-            _spriteBatch.DrawString(_font, $"{_mouseHandler.MousePosition}",
-                _mouseHandler.GetMousePosition(), Color.Black);
+            _spriteBatch.DrawString(
+                _font,
+                $"{timeLeft}", 
+                Vector2.Zero,
+                Color.Black);
+            _spriteBatch.DrawString(
+                _font,
+                $"{score}",
+                new Vector2(_graphics.PreferredBackBufferWidth / 2 - _font.MeasureString(score.ToString()).X / 2, 0),
+                Color.Black);
+
+            _spriteBatch.DrawString(
+                _font,
+                $"{_mouseHandler.MousePosition}",
+                _mouseHandler.MousePosition, Color.Black);
 
             _spriteBatch.End();
 

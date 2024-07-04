@@ -1,10 +1,5 @@
-﻿using match3game2.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using match3game2.Configurations;
+using match3game2.Models;
 
 namespace match3game2.Builders
 {

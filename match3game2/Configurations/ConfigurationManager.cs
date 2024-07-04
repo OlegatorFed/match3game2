@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace match3game2
+﻿namespace match3game2.Configurations
 {
     internal class ConfigurationManager
     {
@@ -22,8 +16,8 @@ namespace match3game2
 
         }
 
-        public ConfigurationManager(int gridWidth, int gridHeight, int gameTime) 
-        { 
+        public ConfigurationManager(int gridWidth, int gridHeight, int gameTime)
+        {
 
             GridConfiguration = new GridConfiguration(gridWidth, gridHeight);
             GameTime = gameTime;

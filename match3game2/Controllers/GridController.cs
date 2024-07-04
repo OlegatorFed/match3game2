@@ -1,12 +1,7 @@
 ﻿using match3game2.Builders;
+using match3game2.Configurations;
 using match3game2.Models;
 using Microsoft.Xna.Framework;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace match3game2.Controllers
 {
