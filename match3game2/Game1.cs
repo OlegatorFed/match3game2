@@ -2,6 +2,7 @@
 using match3game2.Configurations;
 using match3game2.Controllers;
 using match3game2.Utilities;
+using match3game2.Utilities.Renderers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -25,7 +26,6 @@ namespace match3game2
         private TimerController _timerController;
         private ScoreContoller _scoreContoller;
         private MouseHandler _mouseHandler;
-        private ButtonBuilder _buttonBuilder;
 
         public event Action Updated;
 
@@ -36,7 +36,6 @@ namespace match3game2
             services.AddSingleton<GameController>();
             services.AddSingleton<GridController>();
             services.AddSingleton<GridBuilder>();
-            services.AddSingleton<ButtonBuilder>();
             services.AddSingleton<ConfigurationManager>();
             services.AddSingleton<TimerController>();
             services.AddSingleton<ScoreContoller>();
@@ -62,8 +61,6 @@ namespace match3game2
             _timerController.StartTimer();
 
             _mouseHandler = _serviceProvider.GetRequiredService<MouseHandler>();
-
-            _buttonBuilder = _serviceProvider.GetRequiredService<ButtonBuilder>();
 
             base.Initialize();
         }

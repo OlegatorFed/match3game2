@@ -1,4 +1,6 @@
-﻿namespace match3game2.Configurations
+﻿using Microsoft.Xna.Framework;
+
+namespace match3game2.Configurations
 {
     internal class ConfigurationManager
     {
@@ -11,15 +13,15 @@
         public ConfigurationManager()
         {
 
-            GridConfiguration = new GridConfiguration(8, 8);
+            GridConfiguration = new GridConfiguration(new Vector2(300, 300), 8, 8, 50);
             GameTime = 60;
 
         }
 
-        public ConfigurationManager(int gridWidth, int gridHeight, int gameTime)
+        public ConfigurationManager(Vector2 position, int gridWidth, int gridHeight, int gameTime, float gemSize)
         {
 
-            GridConfiguration = new GridConfiguration(gridWidth, gridHeight);
+            GridConfiguration = new GridConfiguration(position, gridWidth, gridHeight, gemSize);
             GameTime = gameTime;
 
         }

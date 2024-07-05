@@ -1,4 +1,6 @@
-﻿namespace match3game2.Configurations
+﻿using Microsoft.Xna.Framework;
+
+namespace match3game2.Configurations
 {
-    public record GridConfiguration(int Width, int Height) { }
+    public record GridConfiguration(Vector2 Position, int Width, int Height, float GemSize) { }
 }

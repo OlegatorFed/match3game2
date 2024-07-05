@@ -1,7 +1,18 @@
-﻿namespace match3game2.Models
+﻿using match3game2.Enums;
+
+namespace match3game2.Models
 {
     internal class Gem
     {
-        public bool yes = true;
+
+        private Colors _color;
+
+        public Gem(Colors color) 
+        {
+            
+            _color = color;
+
+        }
+
     }
 }

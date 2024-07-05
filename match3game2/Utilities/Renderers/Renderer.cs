@@ -15,7 +15,6 @@ namespace match3game2.Utilities.Renderers
         protected SpriteBatch _spriteBatch;
         protected Texture2D _texture;
         protected ContentManager _content;
-        private SpriteBatch spriteBatch;
 
         public Renderer(SpriteBatch spriteBatch, ContentManager content)
         {
@@ -27,9 +26,9 @@ namespace match3game2.Utilities.Renderers
 
         protected Renderer(SpriteBatch spriteBatch)
         {
-            this.spriteBatch = spriteBatch;
+            _spriteBatch = spriteBatch;
         }
 
-        public abstract void Render(Vector2 position);
+        public abstract void Render<T>(T target);
     }
 }

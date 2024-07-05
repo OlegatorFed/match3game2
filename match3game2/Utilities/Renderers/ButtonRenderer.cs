@@ -1,10 +1,10 @@
-﻿using match3game2.Utilities.Renderers;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using static System.Formats.Asn1.AsnWriter;
+using match3game2.Models;
 
-namespace match3game2
+namespace match3game2.Utilities.Renderers
 {
     internal class ButtonRenderer : Renderer
     {
@@ -20,16 +20,14 @@ namespace match3game2
 
         }
 
-        public override void Render(Vector2 position)
+        public override void Render<Button>(Button button)
         {
 
-            _spriteBatch.Begin();
-            _spriteBatch.Draw(_texture, position, Color.White);
-            _spriteBatch.End();
-            /*_spriteBatch.DrawString(
+            /*_spriteBatch.Draw(_texture, button.GetPosition(), Color.White);
+            _spriteBatch.DrawString(
                 _font,
-                _label,
-                _position - new Vector2(_font.MeasureString(_label).X / 2, _font.MeasureString(_label).Y / 2),
+                button.GetLabel(),
+                position - new Vector2(_font.MeasureString(_label).X / 2, _font.MeasureString(_label).Y / 2),
                 Color.Black);*/
         }
     }

@@ -15,7 +15,7 @@ namespace match3game2.Builders
 
         public Grid Build()
         {
-            return new Grid(_gridConfiguration.Width, _gridConfiguration.Height);
+            return new Grid(_gridConfiguration.Position, _gridConfiguration.Width, _gridConfiguration.Height, _gridConfiguration.GemSize);
         } 
 
     }
