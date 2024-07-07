@@ -127,7 +127,7 @@ namespace match3game2
 
             _spriteBatch.DrawString(
                 _font,
-                $"{_gridController._selectedPosition}",
+                $"{_mouseHandler.MousePosition}",
                 _mouseHandler.MousePosition, Color.Black);
 
             _spriteBatch.End();

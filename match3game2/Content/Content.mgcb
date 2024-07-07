@@ -68,6 +68,18 @@
 /processorParam:TextureFormat=Color
 /build:textures/red_gem.png
 
+#begin textures/selection.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/selection.png
+
 #begin textures/white_box_50px.png
 /importer:TextureImporter
 /processor:TextureProcessor

@@ -13,7 +13,7 @@ namespace match3game2.Configurations
         public ConfigurationManager()
         {
 
-            GridConfiguration = new GridConfiguration(new Point(100, 100), 8, 8, 50);
+            GridConfiguration = new GridConfiguration(new Point(50, 50), 8, 8, 50);
             GameTime = 60;
 
         }

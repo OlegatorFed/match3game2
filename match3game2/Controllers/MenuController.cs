@@ -27,8 +27,8 @@ namespace match3game2.Controllers
             //_gameController = gameController;
 
 
-            _startButton = new Button("start", new Vector2(200, 200), new Vector2(50, 100), "Start", Play);
-            _resetButton = new Button("reset", new Vector2(200, 200), new Vector2(50, 100), "Ok", Reset);
+            _startButton = new Button("start", new Point(100, 100), new Point(50, 100), "Start", Play);
+            _resetButton = new Button("reset", new Point(100, 100), new Point(50, 100), "Ok", Reset);
 
             mouseHandler.MousePressed += OnClick;
         }
@@ -65,10 +65,10 @@ namespace match3game2.Controllers
             if (!_active) return; 
 
             if (_startButton.IsActive())
-                _startButton.Render(spriteBatch);
+                _startButton.Render(spriteBatch, ButtonTexture);
 
             if (_resetButton.IsActive())
-                _resetButton.Render(spriteBatch);
+                _resetButton.Render(spriteBatch, ButtonTexture);
         }
 
         private void CheckButtonClicked(Vector2 position)
