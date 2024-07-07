@@ -14,8 +14,12 @@ namespace match3game2.Utilities
 
         public void Configure(SpriteBatch spriteBatch)
         {
-            _spriteBatch = spriteBatch;
+
+            if (_spriteBatch == null)
+                _spriteBatch = spriteBatch;
+
         }
+
 
         public SpriteBatch? GetSpriteBatchOrNull()
         {

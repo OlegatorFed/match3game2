@@ -1,6 +1,7 @@
 ﻿using match3game2.Builders;
 using match3game2.Configurations;
 using match3game2.Controllers;
+using match3game2.Models;
 using match3game2.Utilities;
 using match3game2.Utilities.Renderers;
 using Microsoft.Extensions.DependencyInjection;
@@ -8,6 +9,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace match3game2
@@ -22,10 +24,13 @@ namespace match3game2
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
+        private GameController _gameController;
+        private MenuController _menuController;
         private GridController _gridController;
         private TimerController _timerController;
         private ScoreContoller _scoreContoller;
         private MouseHandler _mouseHandler;
+        private BatchHandle _batchHandle;
 
         public event Action Updated;
 
@@ -34,14 +39,18 @@ namespace match3game2
             IServiceCollection services = new ServiceCollection();
 
             services.AddSingleton<GameController>();
+            services.AddSingleton<MenuController>();
             services.AddSingleton<GridController>();
             services.AddSingleton<GridBuilder>();
             services.AddSingleton<ConfigurationManager>();
             services.AddSingleton<TimerController>();
             services.AddSingleton<ScoreContoller>();
             services.AddSingleton<MouseHandler>();
+            services.AddSingleton<BatchHandle>();
+            services.AddSingleton<ButtonRenderer>();
 
             _serviceProvider = services.BuildServiceProvider();
+
 
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -52,8 +61,8 @@ namespace match3game2
         {
             _gridController = _serviceProvider.GetRequiredService<GridController>();
             _gridController.Fill();
-            _gridController.GetGem(new Point(1, 0));
-            
+            _gridController.FindMatches();
+
             _scoreContoller = _serviceProvider.GetRequiredService<ScoreContoller>();
             _scoreContoller.AddScore(100);
 
@@ -62,12 +71,22 @@ namespace match3game2
 
             _mouseHandler = _serviceProvider.GetRequiredService<MouseHandler>();
 
+            _batchHandle = _serviceProvider.GetRequiredService<BatchHandle>();
+
+            _gameController = _serviceProvider.GetRequiredService<GameController>();
+
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            _batchHandle.Configure(_spriteBatch);
+
+            _gameController.RecieveSpriteBatch(_batchHandle.GetSpriteBatchOrNull());
+            _gameController.RecieveContent(Content);
+            _gameController.LoadContent();
 
             _font = Content.Load<SpriteFont>("fonts/font");
 
@@ -89,8 +108,11 @@ namespace match3game2
 
             int timeLeft = _timerController.TimeLeft;
             int score = _scoreContoller.Score;
+            Grid grid = _gridController.GetGrid();
 
             _spriteBatch.Begin();
+
+            _gameController.Render();
 
             _spriteBatch.DrawString(
                 _font,
@@ -105,7 +127,7 @@ namespace match3game2
 
             _spriteBatch.DrawString(
                 _font,
-                $"{_mouseHandler.MousePosition}",
+                $"{_gridController._selectedPosition}",
                 _mouseHandler.MousePosition, Color.Black);
 
             _spriteBatch.End();

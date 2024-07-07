@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -47,6 +49,11 @@ namespace match3game2.Models
         public void Press()
         {
             _action.Invoke();
+        }
+
+        public void Render(SpriteBatch spriteBatch)
+        {
+
         }
 
     }

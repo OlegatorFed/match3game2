@@ -13,12 +13,12 @@ namespace match3game2.Configurations
         public ConfigurationManager()
         {
 
-            GridConfiguration = new GridConfiguration(new Vector2(300, 300), 8, 8, 50);
+            GridConfiguration = new GridConfiguration(new Point(100, 100), 8, 8, 50);
             GameTime = 60;
 
         }
 
-        public ConfigurationManager(Vector2 position, int gridWidth, int gridHeight, int gameTime, float gemSize)
+        public ConfigurationManager(Point position, int gridWidth, int gridHeight, int gameTime, int gemSize)
         {
 
             GridConfiguration = new GridConfiguration(position, gridWidth, gridHeight, gemSize);

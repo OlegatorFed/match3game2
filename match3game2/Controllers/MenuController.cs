@@ -2,6 +2,8 @@
 using match3game2.Models;
 using match3game2.Utilities;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
+using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,15 +14,17 @@ namespace match3game2.Controllers
 
         private bool _active;
         private MouseHandler _mouseHandler;
-        private GameController _gameController;
+        //private GameController _gameController;
         private Button _startButton;
         private Button _resetButton;
 
-        public MenuController(GameController gameController, MouseHandler mouseHandler)
+        public Texture2D ButtonTexture;
+
+        public MenuController(MouseHandler mouseHandler)
         {
             _active = true;
             _mouseHandler = mouseHandler;
-            _gameController = gameController;
+            //_gameController = gameController;
 
 
             _startButton = new Button("start", new Vector2(200, 200), new Vector2(50, 100), "Start", Play);
@@ -56,20 +60,30 @@ namespace match3game2.Controllers
 
         public void OnClick(Vector2 position) { CheckButtonClicked(position); }
 
+        public void Render(SpriteBatch spriteBatch)
+        {
+            if (!_active) return; 
+
+            if (_startButton.IsActive())
+                _startButton.Render(spriteBatch);
+
+            if (_resetButton.IsActive())
+                _resetButton.Render(spriteBatch);
+        }
+
         private void CheckButtonClicked(Vector2 position)
         {
 
-            if (_active)
-            {
-                if (_startButton.IsActive() && Button.CheckIntersection(position, _startButton))
-                {
-                    _startButton.Press();
-                }
+            if (!_active) return;
 
-                if (_resetButton.IsActive() && Button.CheckIntersection(position, _resetButton))
-                {
-                    _resetButton.Press();
-                }
+            if (_startButton.IsActive() && Button.CheckIntersection(position, _startButton))
+            {
+                _startButton.Press();
+            }
+
+            if (_resetButton.IsActive() && Button.CheckIntersection(position, _resetButton))
+            {
+                _resetButton.Press();
             }
 
         }

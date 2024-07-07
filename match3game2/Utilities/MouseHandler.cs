@@ -29,24 +29,29 @@ namespace match3game2.Utilities
             OnClick();
         }
 
-        private bool CheckClick()
+        private bool CheckPressed()
         {
-            if (_mouseState.LeftButton == ButtonState.Pressed)
-                return true;
-
-            return false;
+            return _mouseState.LeftButton == ButtonState.Pressed;
         }
+
+        private bool CheckReleased()
+        {
+            return _mouseState.LeftButton == ButtonState.Released;
+        }
+
         private Vector2 GetMousePosition() { return new Vector2(_mouseState.X, _mouseState.Y); }
 
         private void OnClick()
         {
-            if (CheckClick() && !_mouseDown)
+            if (CheckPressed() && !_mouseDown)
             {
                 _mouseDown = true;
                 MousePressed?.Invoke(GetMousePosition());
             }
-            else
+            else if (CheckReleased())
+            {
                 _mouseDown = false;
+            }
         }
 
     }

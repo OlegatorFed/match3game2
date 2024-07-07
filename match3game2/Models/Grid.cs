@@ -6,11 +6,11 @@ namespace match3game2.Models
     internal class Grid
     {
 
-        public Vector2 Position;
+        public Point Position;
         public List<List<Gem>> Gems;
-        public float GemSize;
+        public int GemSize;
 
-        public Grid(Vector2 position, int width, int height, float gemSize)
+        public Grid(Point position, int width, int height, int gemSize)
         {
 
             Position = position;
