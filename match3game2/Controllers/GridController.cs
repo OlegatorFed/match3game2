@@ -33,6 +33,8 @@ namespace match3game2.Controllers
         private HashSet<Point> _gemsToDestroy;
         private List<Point> _movedGems;
 
+        private List<Task> _taskQueue;
+
 
         public GridController(ConfigurationManager configurationManager, GridBuilder gridBuilder, MouseHandler mouseHandler) 
         {
@@ -47,6 +49,7 @@ namespace match3game2.Controllers
             _gemsToDestroy = new HashSet<Point>();
             _movedGems = new List<Point>();
 
+            _taskQueue = new List<Task>();
 
             _colors = (Colors[])Enum.GetValues(typeof(Colors));
 
@@ -68,7 +71,7 @@ namespace match3game2.Controllers
             }
         }
 
-        public void FillEmpty()
+        public async void FillEmpty()
         {
             for (int x = 0; x < _configuration.Width; x++)
             {
@@ -76,8 +79,14 @@ namespace match3game2.Controllers
                 {
                     if (_grid.Gems[x][y] != null) continue;
                     UpdateGem(new Point(x, y), new Gem(new Point(x * _grid.GemSize + _grid.Position.X, y * _grid.GemSize + _grid.Position.Y), GetRandomColor()));
+                    _grid.Gems[x][y].Scale = 0f;
+
+                    _taskQueue.Add(_grid.Gems[x][y].ScaleTo(1));
                 }
             }
+
+            await Task.WhenAll(_taskQueue);
+            _taskQueue.Clear();
 
             FindMatches();
         }
@@ -97,8 +106,17 @@ namespace match3game2.Controllers
             _grid.Gems[point.X][point.Y] = null;
         }
 
-        public void RemoveMatches()
+        public async void RemoveMatches()
         {
+            foreach (var position in _gemsToDestroy)
+            {
+                _taskQueue.Add(_grid.Gems[position.X][position.Y].ScaleTo(0));
+            }
+
+            await Task.WhenAll(_taskQueue);
+
+            _taskQueue.Clear();
+
             foreach (var position in _gemsToDestroy)
             {
                 RemoveGem(position);
@@ -106,7 +124,8 @@ namespace match3game2.Controllers
             _gemsToDestroy.Clear();
 
             
-            CollapseAllGems();
+            await CollapseAllGems();
+
             FillEmpty();
         }
 
@@ -114,7 +133,7 @@ namespace match3game2.Controllers
 
         public void OnClick(Vector2 position) 
         {
-            if (!_active) return;
+            if (!_active || _taskQueue.Count > 0) return;
 
             Point gridPosition;
 
@@ -172,10 +191,10 @@ namespace match3game2.Controllers
 
             if (_selectedPosition != null)
             {
-                SwapGems((Point)_selectedPosition, position);
+                //SwapGems((Point)_selectedPosition, position);
                 SwapAction(position, (Point)_selectedPosition);
-                /*if (_grid.Gems[((Point)_selectedPosition).X][((Point)_selectedPosition).Y] != null && _grid.Gems[position.X][position.Y] != null)
-                    FindSwapMatches((Point)_selectedPosition, position);*/
+                _movedGems.Add(position);
+                _movedGems.Add((Point)_selectedPosition);
                 _selectedPosition = null;
             }
             else
@@ -190,12 +209,6 @@ namespace match3game2.Controllers
                 (_grid.Gems[firstGem.X][firstGem.Y], _grid.Gems[secondGem.X][secondGem.Y]) =
                     (_grid.Gems[secondGem.X][secondGem.Y], _grid.Gems[firstGem.X][firstGem.Y]);
 
-
-
-                /*if (_grid.Gems[firstGem.X][firstGem.Y] != null)
-                    _grid.Gems[firstGem.X][firstGem.Y].Move(new Point(firstGem.X * _grid.GemSize + _grid.Position.X, firstGem.Y * _grid.GemSize + _grid.Position.Y));
-                if (_grid.Gems[secondGem.X][secondGem.Y] != null)
-                    _grid.Gems[secondGem.X][secondGem.Y].Move(new Point(secondGem.X * _grid.GemSize + _grid.Position.X, secondGem.Y * _grid.GemSize + _grid.Position.Y));*/
                 UpdateGemPosition(firstGem);
                 UpdateGemPosition(secondGem);
             }
@@ -204,13 +217,24 @@ namespace match3game2.Controllers
 
         private async void SwapAction(Point firstGem, Point secondGem)
         {
-            Task move1 = _grid.Gems[firstGem.X][firstGem.Y].Move();
-            Task move2 = _grid.Gems[secondGem.X][secondGem.Y].Move();
+            SwapGems(firstGem, secondGem);
 
-            await Task.WhenAll(move1, move2);
 
-            if (_grid.Gems[firstGem.X][firstGem.Y] != null && _grid.Gems[secondGem.X][secondGem.Y] != null)
-                FindSwapMatches(firstGem, secondGem);
+            if (CanSwap(firstGem, secondGem))
+            {
+                Task move1 = _grid.Gems[firstGem.X][firstGem.Y].Move();
+                Task move2 = _grid.Gems[secondGem.X][secondGem.Y].Move();
+
+                _taskQueue.Add(move1);
+                _taskQueue.Add(move2);
+
+                await Task.WhenAll(_taskQueue);
+
+                _taskQueue.Clear();
+
+                if (_grid.Gems[firstGem.X][firstGem.Y] != null && _grid.Gems[secondGem.X][secondGem.Y] != null && _movedGems.Count > 0)
+                    FindSwapMatches(firstGem, secondGem);
+            }
         }
 
         private bool CanSwap(Point firstGem, Point secondGem) { 
@@ -235,7 +259,7 @@ namespace match3game2.Controllers
 
             if (firstGemMatch.Count == 0 && secondGemMatch.Count == 0)
             {
-                SwapGems(firstGem, secondGem);
+                _movedGems.Clear();
                 SwapAction(firstGem, secondGem);
             }
             else
@@ -354,6 +378,8 @@ namespace match3game2.Controllers
                         possibleMatch.Add(positionToCheck);
                     }
                 }
+                if (possibleMatch.Count >= 3)
+                    _gemsToDestroy.UnionWith(possibleMatch);
                 currentColor = null;
                 possibleMatch.Clear();
             }
@@ -386,6 +412,8 @@ namespace match3game2.Controllers
                         possibleMatch.Add(positionToCheck);
                     }
                 }
+                if (possibleMatch.Count >= 3)
+                    _gemsToDestroy.UnionWith(possibleMatch);
                 currentColor = null;
                 possibleMatch.Clear();
             }
@@ -393,11 +421,11 @@ namespace match3game2.Controllers
             if (_gemsToDestroy.Count > 0)
             {
                 RemoveMatches();
-                FillEmpty();
+                //FillEmpty();
             }
         }
 
-        private void CollapseAllGems()
+        private async Task CollapseAllGems()
         {
             for (int x = 0; x < _configuration.Width; x++)
             {
@@ -412,9 +440,14 @@ namespace match3game2.Controllers
                 foreach (var gem in _grid.Gems[x])
                 {
                     if (gem != null) 
-                        gem.Move();
+                        _taskQueue.Add(gem.Move());
                 }
+
             }
+            await Task.WhenAll(_taskQueue);
+            _taskQueue.Clear();
+
+            //FindMatches();
 
         }
 

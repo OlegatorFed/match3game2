@@ -104,7 +104,7 @@ namespace match3game2
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.White);
 
             int timeLeft = _timerController.TimeLeft;
             int score = _scoreContoller.Score;

@@ -11,6 +11,7 @@ namespace match3game2.Models
 
         public Point Position;
         public Point Destination;
+        public float Scale = 1f;
         private Colors _color;
 
         public Gem(Point position, Colors color) 
@@ -27,7 +28,7 @@ namespace match3game2.Models
         public void Render(SpriteBatch spriteBatch, Texture2D texture, int size)
         {
             spriteBatch.Draw(texture,
-                new Rectangle(Position.X, Position.Y, size, size),
+                new Rectangle(Position.X + (int)((1f - Scale) * size) / 2, Position.Y + +(int)((1f - Scale) * size) / 2, (int)(size * Scale), (int)(size * Scale)),
                 Color.White);
         }
 
@@ -51,5 +52,19 @@ namespace match3game2.Models
 
         }
 
+        public async Task ScaleTo(int target)
+        {
+            float speed = 0.1f;
+            int sign = MathF.Sign(target - Scale);
+
+
+            while (Scale > target && Scale - target > target || Scale < target && Scale + speed < target)
+            {
+                await Task.Delay(10);
+                Scale += sign * speed;
+            }
+
+            Scale = target;
+        }
     }
 }
