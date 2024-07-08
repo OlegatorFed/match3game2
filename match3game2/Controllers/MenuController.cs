@@ -4,6 +4,7 @@ using match3game2.Utilities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -12,25 +13,35 @@ namespace match3game2.Controllers
     internal class MenuController
     {
 
+        public Action StartAction;
+        public Action ResetAction;
+
         private bool _active;
         private MouseHandler _mouseHandler;
         //private GameController _gameController;
         private Button _startButton;
         private Button _resetButton;
 
-        public Texture2D ButtonTexture;
+        private Texture2D _texture;
+        private SpriteFont _font;
 
         public MenuController(MouseHandler mouseHandler)
         {
             _active = true;
             _mouseHandler = mouseHandler;
-            //_gameController = gameController;
 
-
-            _startButton = new Button("start", new Point(100, 100), new Point(50, 100), "Start", Play);
-            _resetButton = new Button("reset", new Point(100, 100), new Point(50, 100), "Ok", Reset);
+            _startButton = new Button("start", new Point(100, 100), new Point(100, 50), "Start", Play);
+            _resetButton = new Button("reset", new Point(100, 100), new Point(100, 50), "Ok", Reset);
 
             mouseHandler.MousePressed += OnClick;
+
+            Reset();
+        }
+
+        public void LoadContent(ContentManager content)
+        {
+            _font = content.Load<SpriteFont>("fonts/font");
+            _texture = content.Load<Texture2D>("textures/white_box_50px");
         }
 
         public void Play()
@@ -38,6 +49,7 @@ namespace match3game2.Controllers
             _startButton.SetActive(false);
             _resetButton.SetActive(false);
             _active = false;
+            StartAction.Invoke();
         }
 
         public void GameOver()
@@ -52,6 +64,7 @@ namespace match3game2.Controllers
             _active = true;
             _resetButton.SetActive(false);
             _startButton.SetActive(true);
+            ResetAction?.Invoke();
         }
 
         public bool IsActive() { return _active; }
@@ -65,10 +78,10 @@ namespace match3game2.Controllers
             if (!_active) return; 
 
             if (_startButton.IsActive())
-                _startButton.Render(spriteBatch, ButtonTexture);
+                _startButton.Render(spriteBatch, _texture, _font);
 
             if (_resetButton.IsActive())
-                _resetButton.Render(spriteBatch, ButtonTexture);
+                _resetButton.Render(spriteBatch, _texture, _font);
         }
 
         private void CheckButtonClicked(Vector2 position)

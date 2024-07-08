@@ -1,4 +1,6 @@
-﻿namespace match3game2.Controllers
+﻿using System;
+
+namespace match3game2.Controllers
 {
     internal class ScoreContoller
     {
@@ -15,7 +17,7 @@
             Score += score;
         }
 
-        public void ResetScore(int score)
+        public void ResetScore()
         {
             Score = 0;
         }

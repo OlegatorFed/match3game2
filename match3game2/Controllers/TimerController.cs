@@ -9,9 +9,12 @@ namespace match3game2.Controllers
 
         public int TimeLeft { get; private set; }
 
-        public TimerController(ConfigurationManager configurationManager) 
+        private Action _action;
+
+        public TimerController(ConfigurationManager configurationManager, Action action) 
         {
             TimeLeft = configurationManager.GameTime;
+            _action = action;
         }
 
         public async void StartTimer()
@@ -26,7 +29,16 @@ namespace match3game2.Controllers
                 await Task.Delay(TimeSpan.FromSeconds(1));
                 TimeLeft -= 1;
             }
+
+            FinishTimer();
         }
+
+        public void FinishTimer()
+        {
+            _action.Invoke();
+        }
+
+        public void SetTimer(int time) { TimeLeft = time; }
 
     }
 }

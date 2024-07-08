@@ -12,22 +12,49 @@ namespace match3game2.Models
         public Point Position;
         public Point Destination;
         public float Scale = 1f;
-        private Colors _color;
+        public BonusType? BonusType;
+        protected Colors _color;
 
         public Gem(Point position, Colors color) 
         {
             
             Position = position;
             Destination = position;
+            BonusType = null;
+            _color = color;
+
+        }
+
+        public Gem(Point position, Colors color, BonusType bonusType)
+        {
+
+            Position = position;
+            Destination = position;
+            BonusType = bonusType;
             _color = color;
 
         }
 
         public Colors GetColor() { return _color; }
 
+        public BonusType? GetBonusType()
+        {
+            return BonusType;
+        }
+
         public void Render(SpriteBatch spriteBatch, Texture2D texture, int size)
         {
             spriteBatch.Draw(texture,
+                new Rectangle(Position.X + (int)((1f - Scale) * size) / 2, Position.Y + +(int)((1f - Scale) * size) / 2, (int)(size * Scale), (int)(size * Scale)),
+                Color.White);
+        }
+
+        public void Render(SpriteBatch spriteBatch, Texture2D texture, Texture2D bonusTexture, int size)
+        {
+            spriteBatch.Draw(texture,
+                new Rectangle(Position.X + (int)((1f - Scale) * size) / 2, Position.Y + +(int)((1f - Scale) * size) / 2, (int)(size * Scale), (int)(size * Scale)),
+                Color.White);
+            spriteBatch.Draw(bonusTexture,
                 new Rectangle(Position.X + (int)((1f - Scale) * size) / 2, Position.Y + +(int)((1f - Scale) * size) / 2, (int)(size * Scale), (int)(size * Scale)),
                 Color.White);
         }

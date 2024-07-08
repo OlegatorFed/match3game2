@@ -25,11 +25,6 @@ namespace match3game2
         private SpriteBatch _spriteBatch;
 
         private GameController _gameController;
-        private MenuController _menuController;
-        private GridController _gridController;
-        private TimerController _timerController;
-        private ScoreContoller _scoreContoller;
-        private MouseHandler _mouseHandler;
         private BatchHandle _batchHandle;
 
         public event Action Updated;
@@ -59,18 +54,6 @@ namespace match3game2
 
         protected override void Initialize()
         {
-            _gridController = _serviceProvider.GetRequiredService<GridController>();
-            _gridController.Fill();
-            _gridController.FindMatches();
-
-            _scoreContoller = _serviceProvider.GetRequiredService<ScoreContoller>();
-            _scoreContoller.AddScore(100);
-
-            _timerController = _serviceProvider.GetRequiredService<TimerController>();
-            _timerController.StartTimer();
-
-            _mouseHandler = _serviceProvider.GetRequiredService<MouseHandler>();
-
             _batchHandle = _serviceProvider.GetRequiredService<BatchHandle>();
 
             _gameController = _serviceProvider.GetRequiredService<GameController>();
@@ -97,7 +80,7 @@ namespace match3game2
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
 
-            _mouseHandler.Update();
+            _gameController.Update();
 
             base.Update(gameTime);
         }
@@ -106,29 +89,9 @@ namespace match3game2
         {
             GraphicsDevice.Clear(Color.White);
 
-            int timeLeft = _timerController.TimeLeft;
-            int score = _scoreContoller.Score;
-            Grid grid = _gridController.GetGrid();
-
             _spriteBatch.Begin();
 
-            _gameController.Render();
-
-            _spriteBatch.DrawString(
-                _font,
-                $"{timeLeft}", 
-                Vector2.Zero,
-                Color.Black);
-            _spriteBatch.DrawString(
-                _font,
-                $"{score}",
-                new Vector2(_graphics.PreferredBackBufferWidth / 2 - _font.MeasureString(score.ToString()).X / 2, 0),
-                Color.Black);
-
-            _spriteBatch.DrawString(
-                _font,
-                $"{_mouseHandler.MousePosition}",
-                _mouseHandler.MousePosition, Color.Black);
+            _gameController.Render(_graphics);
 
             _spriteBatch.End();
 

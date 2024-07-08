@@ -16,9 +16,12 @@ namespace match3game2.Controllers
     internal class GridController
     {
 
+        public Action Scored;
 
         private bool _active;
         private Dictionary<string, Texture2D> _gemTextures;
+        private Dictionary<string, Texture2D> _bonusTextures;
+        private Dictionary<string, Texture2D> _destroyerTextures;
         private Texture2D _selectionTexture;
 
         private Grid _grid;
@@ -28,17 +31,21 @@ namespace match3game2.Controllers
         private ContentManager _content;
 
         private Colors[] _colors;
+        private int _bombPower;
 
         private Point? _selectedPosition;
         private HashSet<Point> _gemsToDestroy;
         private List<Point> _movedGems;
+        private Dictionary<Point, Gem> _bonusCandidates;
+        private List<Destroyer> _destroyers;
 
         private List<Task> _taskQueue;
-
 
         public GridController(ConfigurationManager configurationManager, GridBuilder gridBuilder, MouseHandler mouseHandler) 
         {
             _gemTextures = new Dictionary<string, Texture2D>();
+            _bonusTextures = new Dictionary<string, Texture2D>();
+            _destroyerTextures = new Dictionary<string, Texture2D>();
 
             _configuration = configurationManager.GridConfiguration;
             _gridBuilder = gridBuilder;
@@ -48,16 +55,32 @@ namespace match3game2.Controllers
             _selectedPosition = null;
             _gemsToDestroy = new HashSet<Point>();
             _movedGems = new List<Point>();
-
+            _bonusCandidates = new Dictionary<Point, Gem>();
+            _destroyers = new List<Destroyer>();
             _taskQueue = new List<Task>();
 
             _colors = (Colors[])Enum.GetValues(typeof(Colors));
-
+            _bombPower = 3;
 
             _mouseHandler.MousePressed += OnClick;
 
             _active = true;
 
+        }
+
+        public bool IsActive() { return _active; }
+
+        public void SetActive(bool state) { _active = state; }
+
+        public void Reset()
+        {
+            _bonusCandidates.Clear();
+            _destroyers.Clear();
+            _taskQueue.Clear();
+            _selectedPosition = null;
+            _grid = null;
+            _grid = _gridBuilder.Build();
+            Fill();
         }
 
         public void Fill()
@@ -108,21 +131,38 @@ namespace match3game2.Controllers
 
         public async void RemoveMatches()
         {
+            List<Point> bonusesToActivate = new List<Point>();
+
             foreach (var position in _gemsToDestroy)
             {
                 _taskQueue.Add(_grid.Gems[position.X][position.Y].ScaleTo(0));
+                if (_grid.Gems[position.X][position.Y].GetBonusType() != null)
+                    bonusesToActivate.Add(position);
             }
 
             await Task.WhenAll(_taskQueue);
-
             _taskQueue.Clear();
+
+            foreach (var position in bonusesToActivate)
+            {
+                BonusType? bonusType = _grid.Gems[position.X][position.Y].GetBonusType();
+                await ActivateBonus(position, bonusType);
+            }
 
             foreach (var position in _gemsToDestroy)
             {
+                Scored?.Invoke();
                 RemoveGem(position);
+
+                if (_bonusCandidates.ContainsKey(position))
+                {
+                    UpdateGem(position, _bonusCandidates[position]);
+                    _bonusCandidates[position].Scale = 0f;
+                    _taskQueue.Add(_bonusCandidates[position].ScaleTo(1));
+                    _bonusCandidates.Remove(position);
+                }
             }
             _gemsToDestroy.Clear();
-
             
             await CollapseAllGems();
 
@@ -150,6 +190,15 @@ namespace match3game2.Controllers
             _gemTextures.Add("yellow", content.Load<Texture2D>("textures/yellow_gem"));
             _gemTextures.Add("magenta", content.Load<Texture2D>("textures/magenta_gem"));
 
+            _bonusTextures.Add("vLine", content.Load<Texture2D>("textures/v_line_mark"));
+            _bonusTextures.Add("hLine", content.Load<Texture2D>("textures/h_line_mark"));
+            _bonusTextures.Add("bomb", content.Load<Texture2D>("textures/bomb_mark"));
+
+            _destroyerTextures.Add("up", content.Load<Texture2D>("textures/v_destroyer_up"));
+            _destroyerTextures.Add("down", content.Load<Texture2D>("textures/v_destroyer_down"));
+            _destroyerTextures.Add("right", content.Load<Texture2D>("textures/h_destroyer_right"));
+            _destroyerTextures.Add("left", content.Load<Texture2D>("textures/h_destroyer_left"));
+
             _selectionTexture = content.Load<Texture2D>("textures/selection");
         }
 
@@ -163,6 +212,10 @@ namespace match3game2.Controllers
                 {
                     if (_grid.Gems[x][y] == null) continue;
                     _grid.Gems[x][y].Render(spriteBatch, _gemTextures[Enum.GetName(_grid.Gems[x][y].GetColor())], _grid.GemSize);
+                    if (_grid.Gems[x][y].BonusType != null)
+                        _grid.Gems[x][y].Render(spriteBatch, _gemTextures[Enum.GetName(_grid.Gems[x][y].GetColor())], _bonusTextures[Enum.GetName((BonusType)_grid.Gems[x][y].GetBonusType())], _grid.GemSize);
+                    else
+                        _grid.Gems[x][y].Render(spriteBatch, _gemTextures[Enum.GetName(_grid.Gems[x][y].GetColor())], _grid.GemSize);
                 }
             }
 
@@ -172,6 +225,11 @@ namespace match3game2.Controllers
                     new Rectangle(new Point(_selectedPosition.Value.X * _grid.GemSize + _grid.Position.X, _selectedPosition.Value.Y * _grid.GemSize + _grid.Position.Y), new Point(_grid.GemSize)),
                     Color.White
                     );
+
+            for (int i = 0; i < _destroyers.Count; i++)
+            {
+                _destroyers[i].Render(spriteBatch, _destroyerTextures[_destroyers[i].GetDirection()], _grid.GemSize);
+            }
         }
 
         private bool GetGemPositionClicked(Vector2 position, out Point gridPosition)
@@ -185,6 +243,8 @@ namespace match3game2.Controllers
         }
 
         private Point GetGridPosition(Vector2 position) { return new Point((int)(position.X - _configuration.Position.X ) / _grid.GemSize, (int)(position.Y - _configuration.Position.Y) / _grid.GemSize); }
+
+        private Point GetGridPosition(Point position) { return new Point((position.X - _configuration.Position.X) / _grid.GemSize, (position.Y - _configuration.Position.Y) / _grid.GemSize); }
 
         private void SelectGem(Point position)
         {
@@ -252,10 +312,146 @@ namespace match3game2.Controllers
             }
         }
 
+        private void AddBonusCandidate(Point position, Colors color, BonusType bonusType)
+        {
+            _bonusCandidates.Add(position, new Gem(new Point(position.X * _grid.GemSize + _grid.Position.X, position.Y * _grid.GemSize + _grid.Position.Y), color, bonusType));
+        }
+
+        private async Task ActivateBonus(Point position, BonusType? bonusType)
+        {
+            switch (bonusType)
+            {
+                case BonusType.vLine:
+                    await VerticalLineAction(position);
+                    break;
+                case BonusType.hLine:
+                    await HorizontalLineAction(position);
+                    break;
+                case BonusType.bomb:
+                    await BombAction(position);
+                    break;
+            }
+        }
+
+        private async Task VerticalLineAction(Point position)
+        {
+            List<Task> tasks = new List<Task>();
+
+            Destroyer destroyer1 = new Destroyer(new Point(position.X * _grid.GemSize + _grid.Position.X, position.Y * _grid.GemSize + _grid.Position.Y),
+                new Point(position.X * _grid.GemSize + _grid.Position.X, _grid.Position.Y));
+            Destroyer destroyer2 = new Destroyer(new Point(position.X * _grid.GemSize + _grid.Position.X, position.Y * _grid.GemSize + _grid.Position.Y),
+                new Point(position.X * _grid.GemSize + _grid.Position.X, _grid.Position.Y + _configuration.Height * _grid.GemSize));
+
+            destroyer1.Moved += DestroyOnFly;
+            destroyer2.Moved += DestroyOnFly;
+
+            _destroyers.Add(destroyer1);
+            _destroyers.Add(destroyer2);
+
+            tasks.Add(destroyer1.Move());
+            tasks.Add(destroyer2.Move());
+            await Task.WhenAll(tasks);
+            tasks.Clear();
+
+            destroyer1.Moved -= DestroyOnFly;
+            destroyer2.Moved -= DestroyOnFly;
+
+            _destroyers.Remove(destroyer1);
+            _destroyers.Remove(destroyer2);
+            destroyer1 = null;
+            destroyer2 = null;
+        }
+
+        private async Task HorizontalLineAction(Point position)
+        {
+            List<Task> tasks = new List<Task>();
+
+            Destroyer destroyer1 = new Destroyer(new Point(position.X * _grid.GemSize + _grid.Position.X, position.Y * _grid.GemSize + _grid.Position.Y),
+                new Point(_grid.Position.X, position.Y * _grid.GemSize + _grid.Position.Y));
+            Destroyer destroyer2 = new Destroyer(new Point(position.X * _grid.GemSize + _grid.Position.X, position.Y * _grid.GemSize + _grid.Position.Y),
+                new Point(position.X + _configuration.Width * _grid.GemSize, position.Y * _grid.GemSize + _grid.Position.Y));
+
+            destroyer1.Moved += DestroyOnFly;
+            destroyer2.Moved += DestroyOnFly;
+
+            _destroyers.Add(destroyer1);
+            _destroyers.Add(destroyer2);
+
+            tasks.Add(destroyer1.Move());
+            tasks.Add(destroyer2.Move());
+            await Task.WhenAll(tasks);
+            tasks.Clear();
+
+            destroyer1.Moved -= DestroyOnFly;
+            destroyer2.Moved -= DestroyOnFly;
+
+            _destroyers.Remove(destroyer1);
+            _destroyers.Remove(destroyer2);
+            destroyer1 = null;
+            destroyer2 = null;
+        }
+
+        private async Task BombAction(Point position)
+        {
+            List<Point> bonusesToActivate = new List<Point>();
+
+            await Task.Delay(250);
+
+            for (int x = position.X - _bombPower / 2; x <= position.X + _bombPower / 2; x++)
+            {
+                for (int y = position.Y - _bombPower / 2; y <= position.Y + _bombPower / 2; y++)
+                {
+                    if (x >= 0 && x < _configuration.Width &&
+                        y >= 0 && y < _configuration.Height &&
+                        !_gemsToDestroy.Contains(new Point(x, y)) &&
+                        new Point(x, y) != position &&
+                        _grid.Gems[x][y] != null)
+                    {
+                        bonusesToActivate.Add(new Point(x, y));
+                        _taskQueue.Add(_grid.Gems[x][y].ScaleTo(0));
+                        _gemsToDestroy.Add(new Point(x, y));
+                    }
+                }
+            }
+            await Task.WhenAll(_taskQueue);
+            _taskQueue.Clear();
+
+            foreach (var bonus in bonusesToActivate)
+            {
+                BonusType? bonusType = _grid.Gems[bonus.X][bonus.Y].GetBonusType();
+                await ActivateBonus(bonus, bonusType);
+            }
+        }
+
+        private async void DestroyOnFly(Point position)
+        {
+
+            Point gridPosition = GetGridPosition(position);
+
+            if (gridPosition.X >= 0 && gridPosition.X < _configuration.Width &&
+                gridPosition.Y >= 0 && gridPosition.Y < _configuration.Height &&
+                !_gemsToDestroy.Contains(gridPosition) &&
+                _grid.Gems[gridPosition.X][gridPosition.Y] != null)
+            {
+                await _grid.Gems[gridPosition.X][gridPosition.Y].ScaleTo(0);
+                _gemsToDestroy.Add(gridPosition);
+                if (_grid.Gems[gridPosition.X][gridPosition.Y].GetBonusType() != null)
+                    await ActivateBonus(gridPosition, (BonusType)_grid.Gems[gridPosition.X][gridPosition.Y].GetBonusType());
+            }
+
+        }
+
+        private bool CheckQueue()
+        {
+            return _taskQueue.Count > 0;
+        }
+
         private void FindSwapMatches(Point firstGem, Point secondGem)
         {
-            List<Point> firstGemMatch = FindMatch(firstGem, _grid.Gems[firstGem.X][firstGem.Y].GetColor());
-            List<Point> secondGemMatch = FindMatch(secondGem, _grid.Gems[secondGem.X][secondGem.Y].GetColor());
+            BonusType? firstMatchDirection;
+            BonusType? secondMatchDirection;
+            List<Point> firstGemMatch = FindMatch(firstGem, _grid.Gems[firstGem.X][firstGem.Y].GetColor(), out firstMatchDirection);
+            List<Point> secondGemMatch = FindMatch(secondGem, _grid.Gems[secondGem.X][secondGem.Y].GetColor(), out secondMatchDirection);
 
             if (firstGemMatch.Count == 0 && secondGemMatch.Count == 0)
             {
@@ -269,16 +465,26 @@ namespace match3game2.Controllers
                 foreach (Point gemPostion in secondGemMatch)
                     _gemsToDestroy.Add(gemPostion);
 
+                if (firstGemMatch.Count >= 4)
+                {
+                    AddBonusCandidate(firstGem, _grid.Gems[firstGem.X][firstGem.Y].GetColor(), (BonusType)firstMatchDirection);
+                }
+                if (secondGemMatch.Count >= 4)
+                {
+                    AddBonusCandidate(secondGem, _grid.Gems[secondGem.X][secondGem.Y].GetColor(), (BonusType)secondMatchDirection);
+                }
+
                 RemoveMatches();
             }
 
         }
 
-        private List<Point> FindMatch(Point position, Colors matchingColor)
+        private List<Point> FindMatch(Point position, Colors matchingColor, out BonusType? bonusType)
         {
             int hScore = 0;
             int vScore = 0;
             int totalScore = 0;
+
             List<Point> gemsInMatch = new List<Point> { new Point(position.X, position.Y) };
             List<Point> rightMatch;
             List<Point> leftMatch;
@@ -298,13 +504,32 @@ namespace match3game2.Controllers
 
             if (vScore >= 2)
                 gemsInMatch = upMatch.Concat(gemsInMatch.Concat(downMatch).ToList()).ToList<Point>();
+            else
+                vScore = 0;
 
             if (hScore >= 2)
-                gemsInMatch = leftMatch.Concat(gemsInMatch.Concat(rightMatch).ToList()).ToList<Point>(); ;
+                gemsInMatch = leftMatch.Concat(gemsInMatch.Concat(rightMatch).ToList()).ToList<Point>();
+            else
+                hScore = 0;
 
             totalScore = hScore + vScore;
 
-            if (hScore < 2 && vScore < 2) return new List<Point>();
+
+            if (totalScore >= 3)
+            {
+                if (vScore > hScore)
+                    bonusType = BonusType.vLine;
+                else
+                    bonusType = BonusType.hLine;
+
+                if (totalScore >= 4)
+                    bonusType = BonusType.bomb;
+            }
+            else
+                bonusType = null;
+
+            if (hScore < 2 && vScore < 2)
+                return new List<Point>();
             else return gemsInMatch;
         }
 

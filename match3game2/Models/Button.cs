@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Runtime.CompilerServices;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace match3game2.Models
 {
@@ -51,12 +52,18 @@ namespace match3game2.Models
             _action.Invoke();
         }
 
-        public void Render(SpriteBatch spriteBatch, Texture2D texture)
+        public void Render(SpriteBatch spriteBatch, Texture2D texture, SpriteFont font)
         {
             spriteBatch.Draw(
                 texture,
                 new Rectangle(GetPosition(), GetSize()),
-                Color.White
+                Color.Gray
+                );
+            spriteBatch.DrawString(
+                font,
+                _label,
+                new Vector2(GetPosition().X + GetSize().X / 2 - font.MeasureString(_label).X / 2, GetPosition().Y + GetSize().Y / 2 - font.MeasureString(_label).Y / 2),
+                Color.Black
                 );
         }
 
