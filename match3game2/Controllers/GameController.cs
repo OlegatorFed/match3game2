@@ -114,10 +114,10 @@ namespace match3game2.Controllers
             }
             else
             {
-                _spriteBatch.DrawString(
+                /*_spriteBatch.DrawString(
                     _font,
                     $"{_mouseHandler.MousePosition}",
-                    _mouseHandler.MousePosition, Color.Black);
+                    _mouseHandler.MousePosition, Color.Black);*/
                 switch (_gameState)
                 {
                     case 0:
