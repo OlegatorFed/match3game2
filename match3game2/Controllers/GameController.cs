@@ -76,7 +76,9 @@ namespace match3game2.Controllers
         {
             _gameState = 1; 
             _timerController.StartTimer();
+            _scoreContoller.ResetScore();
             _gridController.SetActive(true);
+            _gridController.Fill();
             _gridController.FindMatches();
         }
 

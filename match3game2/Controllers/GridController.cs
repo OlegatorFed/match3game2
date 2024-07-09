@@ -75,12 +75,16 @@ namespace match3game2.Controllers
         public void Reset()
         {
             _bonusCandidates.Clear();
+            foreach (var destroyer in _destroyers)
+            {
+                destroyer.Moved -= DestroyOnFly;
+            }
             _destroyers.Clear();
             _taskQueue.Clear();
             _selectedPosition = null;
             _grid = null;
             _grid = _gridBuilder.Build();
-            Fill();
+            //Fill();
         }
 
         public void Fill()
